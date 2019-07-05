@@ -200,9 +200,11 @@ function writeOTBM(__OUTFILE__, data) {
 
     // Write description property
     if(node.description) {
-      buffer = Buffer.alloc(1);
-      buffer.writeUInt8(HEADERS.OTBM_ATTR_DESCRIPTION, 0);
-      attributeBuffer = Buffer.concat([attributeBuffer, buffer, writeASCIIString16LE(node.description)])
+      for (var i = 0; i < node.description.length; i++) {
+        buffer = Buffer.alloc(1);
+        buffer.writeUInt8(HEADERS.OTBM_ATTR_DESCRIPTION, 0);
+        attributeBuffer = Buffer.concat([attributeBuffer, buffer, writeASCIIString16LE(node.description[i])]);
+      }
     }
 
     // Node has an unique identifier
@@ -287,6 +289,7 @@ function writeOTBM(__OUTFILE__, data) {
     var flags = HEADERS.TILESTATE_NONE;
   
     flags |= zones.protection && HEADERS.TILESTATE_PROTECTIONZONE;
+    flags |= zones.deprecated && HEADERS.TILESTATE_DEPRECATED;
     flags |= zones.noPVP && HEADERS.TILESTATE_NOPVP;
     flags |= zones.noLogout && HEADERS.TILESTATE_NOLOGOUT;
     flags |= zones.PVPZone && HEADERS.TILESTATE_PVPZONE;
@@ -604,6 +607,7 @@ function readOTBM(__INFILE__) {
     // Read individual tile flags using bitwise AND &
     return {
       "protection": flags & HEADERS.TILESTATE_PROTECTIONZONE,
+      "deprecated": flags & HEADERS.TILESTATE_DEPRECATED,
       "noPVP": flags & HEADERS.TILESTATE_NOPVP,
       "noLogout": flags & HEADERS.TILESTATE_NOLOGOUT,
       "PVPZone": flags & HEADERS.TILESTATE_PVPZONE,
