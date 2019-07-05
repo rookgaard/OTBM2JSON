@@ -5,12 +5,25 @@ const NODE_ESC = 0xFD;
 const NODE_INIT = 0xFE;
 const NODE_TERM = 0xFF;
 
-__VERSION__ = "1.0.0";
+__VERSION__ = "1.0.1";
 
 function writeOTBM(__OUTFILE__, data) {
 
-  /* FUNCTION writeOTBM
+  /*
+   * Function writeOTBM
    * Writes OTBM from intermediary JSON structure
+   */
+
+  // Write all nodes
+  fs.writeFileSync(__OUTFILE__, serializeOTBM(data));
+  
+}
+
+function serializeOTBM(data) {
+
+  /*
+   * Function serializeOTBM
+   * Serializes OTBM from intermediary JSON structure
    */
 
   function writeNode(node) {
@@ -268,6 +281,22 @@ function writeOTBM(__OUTFILE__, data) {
       attributeBuffer = Buffer.concat([attributeBuffer, buffer]);
     }
 
+    // Write depot identifier
+    if(node.depotId) {
+      buffer = Buffer.alloc(3);
+      buffer.writeUInt8(HEADERS.OTBM_ATTR_DEPOT_ID, 0);
+      buffer.writeUInt16LE(node.depotId, 1);
+      attributeBuffer = Buffer.concat([attributeBuffer, buffer]);
+    }
+
+    // Write house door ID
+    if(node.houseDoorId) {
+      buffer = Buffer.alloc(2);
+      buffer.writeUInt8(HEADERS.OTBM_ATTR_HOUSEDOORID, 0);
+      buffer.writeUInt8(node.houseDoorId, 1);
+      attributeBuffer = Buffer.concat([attributeBuffer, buffer]);
+    }
+
     // Write the zone fields
     if(node.zones) {
       buffer = Buffer.alloc(5);
@@ -303,7 +332,7 @@ function writeOTBM(__OUTFILE__, data) {
   const VERSION = Buffer.alloc(4).fill(0x00);
 
   // Write all nodes
-  fs.writeFileSync(__OUTFILE__, Buffer.concat([VERSION, writeNode(data.data)]));
+  return Buffer.concat([VERSION, writeNode(data.data)]);
 
 }
 
@@ -693,5 +722,6 @@ function readOTBM(__INFILE__) {
 
 module.exports.read = readOTBM;
 module.exports.write = writeOTBM;
+module.exports.serialize = serializeOTBM;
 module.exports.HEADERS = HEADERS;
 module.exports.__VERSION__ = __VERSION__;
